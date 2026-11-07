@@ -81,9 +81,8 @@ export const PersonalInfo = ({
                         id="name"
                         type="text"
                         value={name ?? ""}
-                        onChange={(e) =>
-                            onChange("name", e.target.value)
-                        }
+                        onChange={(e) => onChange("name", e.target.value)}
+                        required
                         className="w-1/2 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-600"
                     />
                 </label>
@@ -101,9 +100,8 @@ export const PersonalInfo = ({
                         id="lastName"
                         type="text"
                         value={lastname ?? ""}
-                        onChange={(e) =>
-                            onChange("lastname", e.target.value)
-                        }
+                        onChange={(e) => onChange("lastname", e.target.value)}
+                        required
                         className="w-1/2 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-600"
                     />
                 </label>
@@ -137,11 +135,11 @@ export const PersonalInfo = ({
 
                     <input
                         id="phone"
-                        type="text"
+                        type="tel"
+                        inputMode="numeric"
                         value={phone ?? ""}
-                        onChange={(e) =>
-                            onChange("phone", e.target.value)
-                        }
+                        onChange={(e) => onChange("phone", e.target.value)}
+                        required
                         className="w-1/2 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-600"
                     />
                 </label>

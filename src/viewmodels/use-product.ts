@@ -1,145 +1,207 @@
-import React, { useCallback, useEffect, useState } from "react"
-import { useAuth } from "../context/useAuth"
-import { createProduct, getProductsByCategoryId } from "../service/product-services"
-import type { ProductPayload, ProductResponse } from "../models/product"
-import type { CategoryResponse } from "../models/category"
-import { getCategories } from "../service/category-service"
-import { toast } from "sonner"
-
+import React, { useCallback, useEffect, useState } from "react";
+import { useAuth } from "../context/useAuth";
+import {
+  createProduct,
+  getProductsByCategoryId
+} from "../service/product-services";
+import type {
+  ProductPayload,
+  ProductResponse
+} from "../models/product";
+import type { CategoryResponse } from "../models/category";
+import { getCategories } from "../service/category-service";
+import {
+  onlyDecimal,
+  onlyNumbers,
+  isValidDecimal,
+  isValidInteger
+} from "../utils/form-validation";
 
 export interface ProductFormState {
-    name: string
-    categoryId: string | number
-    sku: string
-    description: string
-    regularPrice: string
-    offerPrice: string
-    initialStock: string
-    minStockAlert: string
+  name: string;
+  categoryId: string | number;
+  sku: string;
+  description: string;
+  regularPrice: string;
+  offerPrice: string;
+  initialStock: string;
+  minStockAlert: string;
 }
 
 const initialFormState: ProductFormState = {
-    name: "",
-    categoryId: "",
-    sku: "",
-    description: "",
-    regularPrice: "",
-    offerPrice: "",
-    initialStock: "",
-    minStockAlert: ""
-}
+  name: "",
+  categoryId: "",
+  sku: "",
+  description: "",
+  regularPrice: "",
+  offerPrice: "",
+  initialStock: "",
+  minStockAlert: ""
+};
 
-export function useProductViewModel(categoryId: number | string | null) {
-    const { token } = useAuth()
-    const [form, setForm] = useState(initialFormState)
-    const [error, setError] = useState("")
-    const [success, setSuccess] = useState("")
-    const [isLoading, setIsLoading] = useState(false)
-    const [isLoadingCategories, setIsLoadingCategories] = useState(false)
-    const [categories, setCategories] = useState<CategoryResponse[]>([])
-    const [products, setProducts] = useState<ProductResponse[]>([]);
+export function useProductViewModel(
+  categoryId: number | string | null = null
+) {
+  const { token } = useAuth();
 
-    const fetchProducts = useCallback(async () => {
-        if (!categoryId) {
-            return;
-        }
+  const [form, setForm] = useState(initialFormState);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const [categories, setCategories] = useState<CategoryResponse[]>([]);
+  const [products, setProducts] = useState<ProductResponse[]>([]);
 
-        try {
-            setIsLoading(true);
-            setError("");
-            const data = await getProductsByCategoryId(categoryId, token);
-            setProducts(data);
-        } catch (error) {
-            setError(error instanceof Error ? error.message : "Error al cargar los productos");
-        } finally {
-            setIsLoading(false);
-        }
-    }, [categoryId, token]);
+  const fetchProducts = useCallback(async () => {
+    if (!categoryId) return;
 
-    useEffect(() => {
-        fetchProducts()
-    }, [fetchProducts])
+    try {
+      const data = await getProductsByCategoryId(categoryId, token);
+      setProducts(data);
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Error al cargar los productos"
+      );
+    }
+  }, [categoryId, token]);
 
-    useEffect(() => {
-        async function fetchCategories() {
-            try {
-                setIsLoadingCategories(true)
-                const data = await getCategories(token)
-                setCategories(data)
-            } catch (error) {
-                setError(error instanceof Error ? error.message : "Error al cargar categorias")
-            } finally {
-                setIsLoadingCategories(false)
-            }
-        }
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
-        fetchCategories()
-    }, [token])
-
-    const handleChange = (field: keyof ProductFormState, value: string) => {
-        setForm(prev => ({ ...prev, [field]: value }))
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        setIsLoadingCategories(true);
+        const data = await getCategories(token);
+        setCategories(data);
+      } catch (error) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Error al cargar las categorías"
+        );
+      } finally {
+        setIsLoadingCategories(false);
+      }
     }
 
-    const submit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!form.name.trim()) {
-            const message = "El nombre del producto es obligatorio"
-            setError(message)
-            toast.error(message)
-            return
-        }
+    fetchCategories();
+  }, [token]);
 
-        //PARSEAR ALGUNOS DATOS DE PRECIOS Y STOCK
-        const regularPrice = parseFloat(form.regularPrice)
-        const offerPrice = parseFloat(form.offerPrice)
-        const initialStock = parseInt(form.initialStock, 10)
-        const minStockAlert = parseInt(form.minStockAlert, 10)
+  const handleChange = (
+    field: keyof ProductFormState,
+    value: string
+  ) => {
+    setError("");
 
-        if (offerPrice > regularPrice) {
-            const message = "El precio de oferta no puede ser mayor al precio regular"
-            setError(message)
-            toast.error(message)
-            return
-        }
-
-        const payload: ProductPayload = {
-            name: form.name.trim(),
-            categoryId: Number(form.categoryId),
-            sku: form.sku.trim(),
-            description: form.description.trim(),
-            regularPrice: isNaN(regularPrice) ? 0 : regularPrice,
-            offerPrice: isNaN(offerPrice) ? 0 : offerPrice,
-            initialStock: isNaN(initialStock) ? 0 : initialStock,
-            minStockAlert: isNaN(minStockAlert) ? 0 : minStockAlert
-        }
-
-        try {
-            setIsLoading(true)
-            setError("")
-            setSuccess("")
-
-            await createProduct(payload, token)
-            setSuccess("Producto creado con exito")
-            toast.success("Producto creado con éxito")
-            setForm(initialFormState)
-        } catch (error) {
-            const message = error instanceof Error ? error.message : "No se pudo crear el producto"
-            setError(message)
-            toast.error(message)
-        } finally {
-            setIsLoading(false)
-        }
+    if (field === "regularPrice" || field === "offerPrice") {
+      value = onlyDecimal(value);
     }
 
-    return {
-        form,
-        handleChange,
-        submit,
-        isLoading,
-        error,
-        success,
-        categories,
-        isLoadingCategories,
-        products
+    if (field === "initialStock" || field === "minStockAlert") {
+      value = onlyNumbers(value);
     }
+
+    setForm((prev) => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (
+      !form.name.trim() ||
+      !form.categoryId ||
+      !form.sku.trim() ||
+      !form.description.trim() ||
+      !form.regularPrice ||
+      !form.offerPrice ||
+      !form.initialStock ||
+      !form.minStockAlert
+    ) {
+      setError("Completa todos los campos");
+      return;
+    }
+
+    if (!isValidDecimal(form.regularPrice) ||
+        !isValidDecimal(form.offerPrice)) {
+      setError("Los precios deben ser números válidos con máximo dos decimales");
+      return;
+    }
+
+    if (!isValidInteger(form.initialStock) ||
+        !isValidInteger(form.minStockAlert)) {
+      setError("Las existencias deben ser números enteros");
+      return;
+    }
+
+    const regularPrice = Number(form.regularPrice);
+    const offerPrice = Number(form.offerPrice);
+    const initialStock = Number(form.initialStock);
+    const minStockAlert = Number(form.minStockAlert);
+
+    if (regularPrice <= 0) {
+      setError("El precio regular debe ser mayor que cero");
+      return;
+    }
+
+    if (offerPrice > regularPrice) {
+      setError("El precio de oferta no puede ser mayor al precio regular");
+      return;
+    }
+
+    if (initialStock < 0 || minStockAlert < 0) {
+      setError("Las existencias no pueden ser negativas");
+      return;
+    }
+
+    const payload: ProductPayload = {
+      name: form.name.trim(),
+      categoryId: Number(form.categoryId),
+      sku: form.sku.trim(),
+      description: form.description.trim(),
+      regularPrice,
+      offerPrice,
+      initialStock,
+      minStockAlert
+    };
+
+    try {
+      setIsLoading(true);
+
+      await createProduct(payload, token);
+
+      setSuccess("Producto creado con éxito");
+      setForm(initialFormState);
+
+      await fetchProducts();
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo crear el producto"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    form,
+    handleChange,
+    submit,
+    isLoading,
+    error,
+    success,
+    categories,
+    isLoadingCategories,
+    products
+  };
 }

@@ -16,7 +16,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     isLoading,
     error,
     submit
-  }=useLoginViewModel()
+  } = useLoginViewModel()
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <header className="relative w-full border border-slate-100 bg-white/80">
@@ -40,8 +40,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({
           </div>
           <div className="flex items-center">
             <button
-            className="px-5 py-3 bg-indigo-700 text-white hover:bg-indigo-600 rounded-lg text-sm font-semibold transition-all shadow-sm hover:shadow-indigo-100"
-            onClick={onNavigateToRegister}
+              className="px-5 py-3 bg-indigo-700 text-white hover:bg-indigo-600 rounded-lg text-sm font-semibold transition-all shadow-sm hover:shadow-indigo-100"
+              onClick={onNavigateToRegister}
             >
               Registrarse
             </button>
@@ -61,7 +61,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               className="w-full px-4 py-3 border border-slate-400 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               placeholder="Usuario o correo"
               value={email}
-              onChange={(e)=>setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
             <input
@@ -69,7 +69,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               className="w-full mt-2 mb-4 px-4 py-3 border border-slate-400 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               placeholder="Contraseña"
               value={password}
-              onChange={(e)=>setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
             <div className="flex items-center justify-between">
@@ -94,9 +94,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               <button
                 className="w-full py-3 px-4 bg-blue-800 rounded-lg text-white hover:bg-blue-900 hover:shadow-lg transition-all duration-200 active:scale-[0.98] disabled:opacity-50"
                 type="submit"
+                disabled={isLoading}
               >
-                {isLoading? "Ingresando al sistema....":"Loguearse"}
-                </button>
+                {isLoading ? "Ingresando al sistema..." : "Loguearse"}
+              </button>
             </div>
 
           </form>

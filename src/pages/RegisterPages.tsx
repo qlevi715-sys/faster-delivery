@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, { useEffect } from "react";
 import { useRegisterViewModel } from "../viewmodels/use-register";
 import { toast } from "sonner";
 
@@ -22,19 +22,19 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
     } = useRegisterViewModel()
 
     useEffect(() => {
-        if(error){
-          toast.error(error);
-          
+        if (error) {
+            toast.error(error);
+
         }
     }, [error])
 
     useEffect(() => {
-        if(success){
-          toast.success(success);
-          
+        if (success) {
+            toast.success(success);
+
         }
     }, [success])
-        
+
     return (
         <div className="min-h-screen flex flex-col relative overflow-hidden font-sans">
             <header className="relative w-full border border-slate-100 bg-white/80">
@@ -86,10 +86,16 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
                                 required
                             />
 
-                            <label htmlFor="nombre" className="block text-xs font-semibold uppercase mb-2">
+                            <label
+                                htmlFor="apellido"
+                                className="block text-xs font-semibold uppercase mb-2"
+                            >
                                 Apellido
                             </label>
+
                             <input
+                                id="apellido"
+                                name="apellido"
                                 type="text"
                                 value={form.lastname}
                                 onChange={(e) => handleChange("lastname", e.target.value)}
@@ -112,15 +118,19 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
                                 required
                             />
 
-                            <label htmlFor="correo" className="block text-xs font-semibold uppercase mb-2">
-                                Telefono
+                            <label htmlFor="telefono" className="block text-xs font-semibold uppercase mb-2">
+                                Teléfono
                             </label>
+
                             <input
+                                id="telefono"
+                                name="telefono"
+                                type="tel"
+                                inputMode="numeric"
                                 value={form.phone}
-                                type="text"
                                 onChange={(e) => handleChange("phone", e.target.value)}
                                 className="w-full px-4 py-3 mb-2 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 rounded-lg outline-none placeholder-slate-400 transition-all"
-                                placeholder="7778-8548"
+                                placeholder="77788548"
                                 required
                             />
                             <div>
@@ -160,7 +170,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
                             >
                                 {isLoading ? "Creando cuenta..." : "crear cuenta"}
                             </button>
-                            
+
                         </form>
                     </div>
                 </div>

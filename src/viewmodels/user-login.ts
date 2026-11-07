@@ -1,52 +1,57 @@
 import { useState } from "react";
 import { loginUser } from "../service/user-service";
 import { useAuth } from "../context/useAuth";
+import { isValidEmail } from "../utils/form-validation";
 
-export function useLoginViewModel(){
-    
-    //declarar los estados
-    const {
-        login
-    }=useAuth()
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("")
-    const [error, setError] = useState("")
-    const [isLoading, setIsLoading] = useState(false)
+export function useLoginViewModel() {
+  const { login } = useAuth();
 
-      console.log("VALOR EMAIL",email)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-    //funcion submit
-    const submit=async(e:React.FormEvent<HTMLFormElement>)=>{
-        e.preventDefault()
-        setError("")
+  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
 
-        if(!email || !password){
-            setError("Completa correo y contraseña")
-            return
-        }
-        setIsLoading(true)
-        try {
-            const data = await loginUser({email,password})
-            login(data,true)
-
-        } catch (error) {
-            console.log("LOGIN ERROR", error)
-            setError(error instanceof Error ? error.message : "Credenciales inválidas")
-        } finally{
-            setIsLoading(false)
-        }
-
+    if (!email.trim() || !password) {
+      setError("Completa correo y contraseña");
+      return;
     }
 
-    //retornar lo que necesitamos en la UI
-
-    return{
-        email,
-        password,
-        setEmail,
-        setPassword,
-        submit,
-        isLoading,
-        error
+    if (!isValidEmail(email)) {
+      setError("Ingresa un correo electrónico válido");
+      return;
     }
+
+    setIsLoading(true);
+
+    try {
+      const data = await loginUser({
+        email: email.trim(),
+        password
+      });
+
+      login(data, true);
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Credenciales inválidas"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    email,
+    password,
+    setEmail,
+    setPassword,
+    submit,
+    isLoading,
+    error
+  };
 }
