@@ -1,17 +1,11 @@
 import type React from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 import { ProductForm } from "../components/ProductForm";
 
 export const ProductCreatePage: React.FC = () => {
   const navigate = useNavigate();
 
-  const handleSuccess = () => {
-    console.log("EJECUTANDO EL ONSUCCESS");
-
-    toast.success("Producto registrado correctamente");
-  };
-
+  // La alerta de éxito la lanza el propio formulario al guardar (así no sale duplicada).
   return (
     <div className="space-y-6">
       <div>
@@ -19,10 +13,7 @@ export const ProductCreatePage: React.FC = () => {
         <p className="mt-1 text-sm text-slate-500">Crea y administra los productos para tus clientes</p>
       </div>
 
-      <ProductForm
-        onCancel={() => navigate("/catalog")}
-        onSuccess={handleSuccess}
-      />
+      <ProductForm onCancel={() => navigate("/catalog")} />
     </div>
   );
 };

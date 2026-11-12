@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useAuth } from "../context/useAuth";
 import {
   createProduct,
@@ -10,11 +11,19 @@ import type {
 } from "../models/product";
 import type { CategoryResponse } from "../models/category";
 import { getCategories } from "../service/category-service";
+import { useFieldErrors } from "./use-field-errors";
 import {
-  onlyDecimal,
-  onlyNumbers,
-  isValidDecimal,
-  isValidInteger
+  PRODUCT_NAME_MAX_LENGTH,
+  SKU_MAX_LENGTH,
+  STOCK_MAX_LENGTH,
+  compactErrors,
+  sanitizeInput,
+  summarizeErrors,
+  validatePrice,
+  validateProductName,
+  validateRequiredText,
+  validateSku,
+  validateWholeNumber
 } from "../utils/form-validation";
 
 export interface ProductFormState {
@@ -39,18 +48,53 @@ const initialFormState: ProductFormState = {
   minStockAlert: ""
 };
 
+const SUBJECTS = {
+  name: "El nombre del producto",
+  sku: "El código de barras",
+  description: "La descripción",
+  regularPrice: "El precio regular",
+  offerPrice: "El precio de oferta",
+  initialStock: "El stock inicial",
+  minStockAlert: "El stock mínimo"
+};
+
+// Bloquea los caracteres no permitidos según el campo y devuelve el mensaje si hubo rechazo.
+const filterField = (field: keyof ProductFormState, raw: string) => {
+  switch (field) {
+    case "name":
+      return sanitizeInput("text", raw, SUBJECTS.name, PRODUCT_NAME_MAX_LENGTH);
+
+    case "sku":
+      return sanitizeInput("digits", raw, SUBJECTS.sku, SKU_MAX_LENGTH);
+
+    case "regularPrice":
+    case "offerPrice":
+      return sanitizeInput("decimal", raw, SUBJECTS[field]);
+
+    case "initialStock":
+    case "minStockAlert":
+      return sanitizeInput("digits", raw, SUBJECTS[field], STOCK_MAX_LENGTH);
+
+    default:
+      return { value: raw, error: "" };
+  }
+};
+
 export function useProductViewModel(
-  categoryId: number | string | null = null
+  categoryId: number | string | null = null,
+  onSuccessCallback?: () => void
 ) {
   const { token } = useAuth();
 
   const [form, setForm] = useState(initialFormState);
+  // Solo errores al CARGAR productos/categorías (los de enviar el formulario salen como toast).
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [products, setProducts] = useState<ProductResponse[]>([]);
+  const { fieldErrors, reportInputError, replaceFieldErrors } =
+    useFieldErrors<keyof ProductFormState>();
 
   const fetchProducts = useCallback(async () => {
     if (!categoryId) return;
@@ -93,72 +137,60 @@ export function useProductViewModel(
 
   const handleChange = (
     field: keyof ProductFormState,
-    value: string
+    raw: string
   ) => {
-    setError("");
+    const { value, error } = filterField(field, raw);
 
-    if (field === "regularPrice" || field === "offerPrice") {
-      value = onlyDecimal(value);
-    }
-
-    if (field === "initialStock" || field === "minStockAlert") {
-      value = onlyNumbers(value);
-    }
-
+    reportInputError(field, error);
     setForm((prev) => ({
       ...prev,
       [field]: value
     }));
   };
 
-  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
+  const validate = () => {
+    const regularPriceError = validatePrice(
+      form.regularPrice,
+      SUBJECTS.regularPrice
+    );
+
+    let offerPriceError = validatePrice(
+      form.offerPrice,
+      SUBJECTS.offerPrice,
+      { allowZero: true }
+    );
 
     if (
-      !form.name.trim() ||
-      !form.categoryId ||
-      !form.sku.trim() ||
-      !form.description.trim() ||
-      !form.regularPrice ||
-      !form.offerPrice ||
-      !form.initialStock ||
-      !form.minStockAlert
+      !regularPriceError &&
+      !offerPriceError &&
+      Number(form.offerPrice) > Number(form.regularPrice)
     ) {
-      setError("Completa todos los campos");
-      return;
+      offerPriceError =
+        "El precio de oferta no puede ser mayor al precio regular.";
     }
 
-    if (!isValidDecimal(form.regularPrice) ||
-        !isValidDecimal(form.offerPrice)) {
-      setError("Los precios deben ser números válidos con máximo dos decimales");
-      return;
-    }
+    return compactErrors<keyof ProductFormState>({
+      name: validateProductName(form.name, SUBJECTS.name),
+      categoryId: form.categoryId ? "" : "Selecciona una categoría.",
+      sku: validateSku(form.sku, SUBJECTS.sku),
+      description: validateRequiredText(form.description, SUBJECTS.description),
+      regularPrice: regularPriceError,
+      offerPrice: offerPriceError,
+      initialStock: validateWholeNumber(form.initialStock, SUBJECTS.initialStock),
+      minStockAlert: validateWholeNumber(form.minStockAlert, SUBJECTS.minStockAlert)
+    });
+  };
 
-    if (!isValidInteger(form.initialStock) ||
-        !isValidInteger(form.minStockAlert)) {
-      setError("Las existencias deben ser números enteros");
-      return;
-    }
+  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-    const regularPrice = Number(form.regularPrice);
-    const offerPrice = Number(form.offerPrice);
-    const initialStock = Number(form.initialStock);
-    const minStockAlert = Number(form.minStockAlert);
+    const errors = validate();
+    replaceFieldErrors(errors);
 
-    if (regularPrice <= 0) {
-      setError("El precio regular debe ser mayor que cero");
-      return;
-    }
+    const summary = summarizeErrors(errors);
 
-    if (offerPrice > regularPrice) {
-      setError("El precio de oferta no puede ser mayor al precio regular");
-      return;
-    }
-
-    if (initialStock < 0 || minStockAlert < 0) {
-      setError("Las existencias no pueden ser negativas");
+    if (summary) {
+      toast.error(summary);
       return;
     }
 
@@ -167,10 +199,10 @@ export function useProductViewModel(
       categoryId: Number(form.categoryId),
       sku: form.sku.trim(),
       description: form.description.trim(),
-      regularPrice,
-      offerPrice,
-      initialStock,
-      minStockAlert
+      regularPrice: Number(form.regularPrice),
+      offerPrice: Number(form.offerPrice),
+      initialStock: Number(form.initialStock),
+      minStockAlert: Number(form.minStockAlert)
     };
 
     try {
@@ -178,12 +210,13 @@ export function useProductViewModel(
 
       await createProduct(payload, token);
 
-      setSuccess("Producto creado con éxito");
+      toast.success("Producto creado con éxito");
       setForm(initialFormState);
 
       await fetchProducts();
+      onSuccessCallback?.();
     } catch (error) {
-      setError(
+      toast.error(
         error instanceof Error
           ? error.message
           : "No se pudo crear el producto"
@@ -199,7 +232,7 @@ export function useProductViewModel(
     submit,
     isLoading,
     error,
-    success,
+    fieldErrors,
     categories,
     isLoadingCategories,
     products

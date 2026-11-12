@@ -3,10 +3,11 @@ import { useEffect } from "react";
 import { useProductViewModel } from "../viewmodels/use-product";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
+import { FieldError } from "./FieldError";
 
 interface ProductFormProps {
   onCancel: () => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
 }
 
 export const ProductForm: React.FC<ProductFormProps> = ({
@@ -21,21 +22,15 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     categories,
     isLoadingCategories,
     error,
-    success
-  } = useProductViewModel();
+    fieldErrors
+  } = useProductViewModel(null, onSuccess);
 
+  // `error` solo trae fallos al cargar las categorías; los del formulario salen como toast al enviar.
   useEffect(() => {
     if (error) {
       toast.error(error);
     }
   }, [error]);
-
-  useEffect(() => {
-    if (success) {
-      toast.success(success);
-      onSuccess();
-    }
-  }, [success, onSuccess]);
 
   return (
     <div className="max-w-4xl rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
@@ -51,7 +46,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         </p>
       </div>
 
-      <form onSubmit={submit} className="p-6 space-y-6">
+      <form onSubmit={submit} noValidate className="p-6 space-y-6">
 
         {/* Nombre del producto */}
         <div>
@@ -70,8 +65,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             onChange={(e) => handleChange("name", e.target.value)}
             required
             placeholder="Ej. Hamburguesa Doble Carne"
-            className="w-full rounded-lg border border-slate-200 py-3 px-4 text-xs placeholder-slate-400 focus:border-indigo-600 focus:outline-none"
+            aria-invalid={Boolean(fieldErrors.name)}
+            aria-describedby="nombre-error"
+            className="w-full rounded-lg border border-slate-200 py-3 px-4 text-xs placeholder-slate-400 focus:border-indigo-600 focus:outline-none aria-invalid:border-red-500 aria-invalid:focus:border-red-500"
           />
+          <FieldError id="nombre-error" message={fieldErrors.name} />
         </div>
 
         {/* Categoría */}
@@ -90,7 +88,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             disabled={isLoadingCategories}
             value={form.categoryId}
             onChange={(e) => handleChange("categoryId", e.target.value)}
-            className="w-full rounded-lg border border-slate-200 py-3 px-4 text-xs text-slate-700 focus:border-indigo-600 focus:outline-none"
+            aria-invalid={Boolean(fieldErrors.categoryId)}
+            aria-describedby="categoria-error"
+            className="w-full rounded-lg border border-slate-200 py-3 px-4 text-xs text-slate-700 focus:border-indigo-600 focus:outline-none aria-invalid:border-red-500 aria-invalid:focus:border-red-500"
           >
             <option value="">
               {isLoadingCategories
@@ -104,6 +104,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               </option>
             ))}
           </select>
+          <FieldError id="categoria-error" message={fieldErrors.categoryId} />
         </div>
 
         {/* Código de barras */}
@@ -124,8 +125,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             value={form.sku}
             onChange={(e) => handleChange("sku", e.target.value)}
             placeholder="Ej. 750564654654654"
-            className="w-full rounded-lg border border-slate-200 py-3 px-4 text-xs placeholder-slate-400 focus:border-indigo-600 focus:outline-none"
+            aria-invalid={Boolean(fieldErrors.sku)}
+            aria-describedby="codigo-barra-error"
+            className="w-full rounded-lg border border-slate-200 py-3 px-4 text-xs placeholder-slate-400 focus:border-indigo-600 focus:outline-none aria-invalid:border-red-500 aria-invalid:focus:border-red-500"
           />
+          <FieldError id="codigo-barra-error" message={fieldErrors.sku} />
 
           <span className="text-[10px] text-slate-400 block mt-1">
             Código interno de inventario. Ingresa únicamente números.
@@ -148,8 +152,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             value={form.description}
             onChange={(e) => handleChange("description", e.target.value)}
             placeholder="Describe la presentación y notas de preparación"
-            className="w-full h-32 rounded-lg border border-slate-200 py-3 px-4 text-xs placeholder-slate-400 focus:border-indigo-600 focus:outline-none"
+            aria-invalid={Boolean(fieldErrors.description)}
+            aria-describedby="descripcion-error"
+            className="w-full h-32 rounded-lg border border-slate-200 py-3 px-4 text-xs placeholder-slate-400 focus:border-indigo-600 focus:outline-none aria-invalid:border-red-500 aria-invalid:focus:border-red-500"
           />
+          <FieldError id="descripcion-error" message={fieldErrors.description} />
 
           <span className="text-[10px] text-slate-400 block mt-1">
             Asegúrate de incluir advertencias o especificaciones de porciones
@@ -177,16 +184,18 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               <input
                 id="precio-regular"
                 name="regularPrice"
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={form.regularPrice}
                 onChange={(e) => handleChange("regularPrice", e.target.value)}
-                step="0.01"
-                min="0.01"
                 required
                 placeholder="0.00"
-                className="w-full border border-slate-200 py-3 pl-8 pr-4 text-xs text-slate-700 focus:border-indigo-600 focus:outline-none"
+                aria-invalid={Boolean(fieldErrors.regularPrice)}
+                aria-describedby="precio-regular-error"
+                className="w-full rounded-lg border border-slate-200 py-3 pl-8 pr-4 text-xs text-slate-700 focus:border-indigo-600 focus:outline-none aria-invalid:border-red-500 aria-invalid:focus:border-red-500"
               />
             </div>
+            <FieldError id="precio-regular-error" message={fieldErrors.regularPrice} />
           </div>
 
           {/* Precio de oferta */}
@@ -206,16 +215,18 @@ export const ProductForm: React.FC<ProductFormProps> = ({
               <input
                 id="precio-oferta"
                 name="offerPrice"
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={form.offerPrice}
                 onChange={(e) => handleChange("offerPrice", e.target.value)}
-                step="0.01"
-                min="0"
                 required
                 placeholder="0.00"
-                className="w-full border border-slate-200 py-3 pl-8 pr-4 text-xs text-slate-700 focus:border-indigo-600 focus:outline-none"
+                aria-invalid={Boolean(fieldErrors.offerPrice)}
+                aria-describedby="precio-oferta-error"
+                className="w-full rounded-lg border border-slate-200 py-3 pl-8 pr-4 text-xs text-slate-700 focus:border-indigo-600 focus:outline-none aria-invalid:border-red-500 aria-invalid:focus:border-red-500"
               />
             </div>
+            <FieldError id="precio-oferta-error" message={fieldErrors.offerPrice} />
           </div>
 
           {/* Stock inicial */}
@@ -230,15 +241,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             <input
               id="stock-inicial"
               name="initialStock"
-              type="number"
-              step="1"
-              min="0"
+              type="text"
+              inputMode="numeric"
               value={form.initialStock}
               onChange={(e) => handleChange("initialStock", e.target.value)}
               required
               placeholder="0"
-              className="w-full border border-slate-200 rounded-lg py-3 px-4 text-xs text-slate-700 focus:border-indigo-600 focus:outline-none"
+              aria-invalid={Boolean(fieldErrors.initialStock)}
+              aria-describedby="stock-inicial-error"
+              className="w-full border border-slate-200 rounded-lg py-3 px-4 text-xs text-slate-700 focus:border-indigo-600 focus:outline-none aria-invalid:border-red-500 aria-invalid:focus:border-red-500"
             />
+            <FieldError id="stock-inicial-error" message={fieldErrors.initialStock} />
           </div>
 
           {/* Stock mínimo */}
@@ -253,15 +266,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             <input
               id="stock-minimo"
               name="minStockAlert"
-              type="number"
-              step="1"
-              min="0"
+              type="text"
+              inputMode="numeric"
               value={form.minStockAlert}
               onChange={(e) => handleChange("minStockAlert", e.target.value)}
               required
               placeholder="0"
-              className="w-full border border-slate-200 rounded-lg py-3 px-4 text-xs text-slate-700 focus:border-indigo-600 focus:outline-none"
+              aria-invalid={Boolean(fieldErrors.minStockAlert)}
+              aria-describedby="stock-minimo-error"
+              className="w-full border border-slate-200 rounded-lg py-3 px-4 text-xs text-slate-700 focus:border-indigo-600 focus:outline-none aria-invalid:border-red-500 aria-invalid:focus:border-red-500"
             />
+            <FieldError id="stock-minimo-error" message={fieldErrors.minStockAlert} />
           </div>
 
         </div>

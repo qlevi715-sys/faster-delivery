@@ -16,8 +16,7 @@ export const ProfilePage = ({ onBackToDashboard }: ProfilePageProps) => {
         handleChange,
         submit,
         isLoading,
-        error,
-        success
+        fieldErrors
     }=useProfileViewModel()
     const fullName = `${user?.name ?? ""} ${user?.lastName ?? ""}`.trim()
     const handleShare = () => {
@@ -87,8 +86,7 @@ export const ProfilePage = ({ onBackToDashboard }: ProfilePageProps) => {
                         onChange={handleChange}
                         onSave={submit}
                         isLoading={isLoading}
-                        error={error}
-                        success={success}
+                        fieldErrors={fieldErrors}
                     />
                 </div>
             </div>

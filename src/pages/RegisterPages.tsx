@@ -1,39 +1,28 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useRegisterViewModel } from "../viewmodels/use-register";
-import { toast } from "sonner";
+import { FieldError } from "../components/FieldError";
 
 interface RegisterPageProps {
     onNavigateToLogin: () => void;
 }
 
+const inputClass =
+    "w-full px-4 py-3 mb-2 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 rounded-lg outline-none placeholder-slate-400 transition-all aria-invalid:border-red-500 aria-invalid:focus:border-red-500 aria-invalid:focus:ring-red-500";
+
 export const RegisterPage: React.FC<RegisterPageProps> = ({
     onNavigateToLogin
 }) => {
 
+    // Al registrarse con éxito, el usuario pasa a la pantalla de login.
     const {
         form,
         confirmPassword,
-        setConfirmPassword,
+        handleConfirmPasswordChange,
         isLoading,
-        error,
+        fieldErrors,
         handleChange,
-        success,
         submit
-    } = useRegisterViewModel()
-
-    useEffect(() => {
-        if (error) {
-            toast.error(error);
-
-        }
-    }, [error])
-
-    useEffect(() => {
-        if (success) {
-            toast.success(success);
-
-        }
-    }, [success])
+    } = useRegisterViewModel(onNavigateToLogin)
 
     return (
         <div className="min-h-screen flex flex-col relative overflow-hidden font-sans">
@@ -67,7 +56,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
                                 Crea tu cuenta y disfruta de las promociones recientes
                             </p>
                         </div>
-                        <form onSubmit={submit} action="">
+                        <form onSubmit={submit} noValidate>
                             <label htmlFor=
                                 "nombre"
                                 className="block text-xs font-semibold uppercase mb-2"
@@ -81,14 +70,17 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
                                 type="text"
                                 value={form.name}
                                 onChange={(e) => handleChange("name", e.target.value)}
-                                className="w-full px-4 py-3 mb-2 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 rounded-lg outline-none placeholder-slate-400 transition-all"
+                                className={inputClass}
                                 placeholder="Registra tu nombre"
+                                aria-invalid={Boolean(fieldErrors.name)}
+                                aria-describedby="nombre-error"
                                 required
                             />
+                            <FieldError id="nombre-error" message={fieldErrors.name} />
 
                             <label
                                 htmlFor="apellido"
-                                className="block text-xs font-semibold uppercase mb-2"
+                                className="block text-xs font-semibold uppercase mb-2 mt-2"
                             >
                                 Apellido
                             </label>
@@ -99,12 +91,15 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
                                 type="text"
                                 value={form.lastname}
                                 onChange={(e) => handleChange("lastname", e.target.value)}
-                                className="w-full px-4 py-3 mb-2 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 rounded-lg outline-none placeholder-slate-400 transition-all"
+                                className={inputClass}
                                 placeholder="Registra tu apellido"
+                                aria-invalid={Boolean(fieldErrors.lastname)}
+                                aria-describedby="apellido-error"
                                 required
                             />
+                            <FieldError id="apellido-error" message={fieldErrors.lastname} />
 
-                            <label htmlFor="correo" className="block text-xs font-semibold uppercase mb-2">
+                            <label htmlFor="correo" className="block text-xs font-semibold uppercase mb-2 mt-2">
                                 Direccion de correo electronico
                             </label>
                             <input
@@ -113,12 +108,15 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
                                 type="email"
                                 value={form.email}
                                 onChange={(e) => handleChange("email", e.target.value)}
-                                className="w-full px-4 py-3 mb-2 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 rounded-lg outline-none placeholder-slate-400 transition-all"
+                                className={inputClass}
                                 placeholder="example@gmail.com"
+                                aria-invalid={Boolean(fieldErrors.email)}
+                                aria-describedby="correo-error"
                                 required
                             />
+                            <FieldError id="correo-error" message={fieldErrors.email} />
 
-                            <label htmlFor="telefono" className="block text-xs font-semibold uppercase mb-2">
+                            <label htmlFor="telefono" className="block text-xs font-semibold uppercase mb-2 mt-2">
                                 Teléfono
                             </label>
 
@@ -129,12 +127,16 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
                                 inputMode="numeric"
                                 value={form.phone}
                                 onChange={(e) => handleChange("phone", e.target.value)}
-                                className="w-full px-4 py-3 mb-2 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 rounded-lg outline-none placeholder-slate-400 transition-all"
+                                className={inputClass}
                                 placeholder="77788548"
+                                aria-invalid={Boolean(fieldErrors.phone)}
+                                aria-describedby="telefono-error"
                                 required
                             />
+                            <FieldError id="telefono-error" message={fieldErrors.phone} />
+
                             <div>
-                                <label htmlFor="password" className="block text-xs font-semibold uppercase mb-2">
+                                <label htmlFor="password" className="block text-xs font-semibold uppercase mb-2 mt-2">
                                     Contraseña
                                 </label>
                                 <input
@@ -143,30 +145,38 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
                                     name="password"
                                     type="password"
                                     onChange={(e) => handleChange("password", e.target.value)}
-                                    className="w-full px-4 py-3 mb-2 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 rounded-lg outline-none placeholder-slate-400 transition-all"
+                                    className={inputClass}
                                     placeholder="Digita tu contraseña"
+                                    aria-invalid={Boolean(fieldErrors.password)}
+                                    aria-describedby="password-error"
                                     required
                                 />
+                                <FieldError id="password-error" message={fieldErrors.password} />
                             </div>
 
                             <div>
-                                <label htmlFor="password" className="block text-xs font-semibold uppercase mb-2">
+                                <label htmlFor="confirm-password" className="block text-xs font-semibold uppercase mb-2 mt-2">
                                     Confirmar Contraseña
                                 </label>
                                 <input
+                                    id="confirm-password"
+                                    name="confirm-password"
                                     type="password"
                                     value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="w-full px-4 py-3 mb-2 border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 rounded-lg outline-none placeholder-slate-400 transition-all"
+                                    onChange={(e) => handleConfirmPasswordChange(e.target.value)}
+                                    className={inputClass}
                                     placeholder="Digita tu contraseña de confirmacion"
+                                    aria-invalid={Boolean(fieldErrors.confirmPassword)}
+                                    aria-describedby="confirm-password-error"
                                     required
                                 />
+                                <FieldError id="confirm-password-error" message={fieldErrors.confirmPassword} />
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full py-3 px-4 bg-blue-800 rounded-lg text-white hover:bg-blue-900 hover:shadow-lg transition-all duration-200 active:scale-[0.98] disabled:opacity-50"
+                                className="mt-4 w-full py-3 px-4 bg-blue-800 rounded-lg text-white hover:bg-blue-900 hover:shadow-lg transition-all duration-200 active:scale-[0.98] disabled:opacity-50"
                             >
                                 {isLoading ? "Creando cuenta..." : "crear cuenta"}
                             </button>

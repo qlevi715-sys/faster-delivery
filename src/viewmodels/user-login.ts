@@ -1,27 +1,52 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { loginUser } from "../service/user-service";
 import { useAuth } from "../context/useAuth";
-import { isValidEmail } from "../utils/form-validation";
+import { useFieldErrors } from "./use-field-errors";
+import {
+  compactErrors,
+  summarizeErrors,
+  validateEmail
+} from "../utils/form-validation";
+
+type LoginField = "email" | "password";
 
 export function useLoginViewModel() {
   const { login } = useAuth();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmailValue] = useState("");
+  const [password, setPasswordValue] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { fieldErrors, setFieldError, replaceFieldErrors } =
+    useFieldErrors<LoginField>();
+
+  const setEmail = (value: string) => {
+    setFieldError("email", "");
+    setError("");
+    setEmailValue(value);
+  };
+
+  const setPassword = (value: string) => {
+    setFieldError("password", "");
+    setError("");
+    setPasswordValue(value);
+  };
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
-    if (!email.trim() || !password) {
-      setError("Completa correo y contraseña");
-      return;
-    }
+    const errors = compactErrors<LoginField>({
+      email: validateEmail(email),
+      password: password ? "" : "Completa la contraseña."
+    });
+    replaceFieldErrors(errors);
 
-    if (!isValidEmail(email)) {
-      setError("Ingresa un correo electrónico válido");
+    const summary = summarizeErrors(errors);
+
+    if (summary) {
+      toast.error(summary);
       return;
     }
 
@@ -34,12 +59,13 @@ export function useLoginViewModel() {
       });
 
       login(data, true);
-    } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Credenciales inválidas"
-      );
+      toast.success("Sesión iniciada correctamente");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Credenciales inválidas";
+
+      setError(message);
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -52,6 +78,7 @@ export function useLoginViewModel() {
     setPassword,
     submit,
     isLoading,
-    error
+    error,
+    fieldErrors
   };
 }

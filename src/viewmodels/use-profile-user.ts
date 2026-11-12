@@ -1,13 +1,26 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useAuth } from "../context/useAuth";
 import type { UserRequest } from "../models/user";
 import { updateUserProfile } from "../service/user-service";
+import { useFieldErrors } from "./use-field-errors";
 import {
-  onlyLetters,
-  onlyNumbers,
-  isValidName,
-  isValidPhone
+  NAME_MAX_LENGTH,
+  PHONE_MAX_LENGTH,
+  compactErrors,
+  sanitizeInput,
+  summarizeErrors,
+  validateName,
+  validatePhone
 } from "../utils/form-validation";
+
+type ProfileField = "name" | "lastname" | "phone";
+
+const SUBJECTS = {
+  name: "El nombre",
+  lastname: "El apellido",
+  phone: "El teléfono"
+};
 
 export function useProfileViewModel() {
   const { user, updateUser, token } = useAuth();
@@ -19,8 +32,8 @@ export function useProfileViewModel() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
+  const { fieldErrors, reportInputError, replaceFieldErrors } =
+    useFieldErrors<ProfileField>();
 
   useEffect(() => {
     if (user) {
@@ -32,20 +45,13 @@ export function useProfileViewModel() {
     }
   }, [user]);
 
-  const handleChange = (
-    field: keyof typeof form,
-    value: string
-  ) => {
-    setError("");
+  const handleChange = (field: ProfileField, raw: string) => {
+    const { value, error } =
+      field === "phone"
+        ? sanitizeInput("digits", raw, SUBJECTS.phone, PHONE_MAX_LENGTH)
+        : sanitizeInput("letters", raw, SUBJECTS[field], NAME_MAX_LENGTH);
 
-    if (field === "name" || field === "lastname") {
-      value = onlyLetters(value);
-    }
-
-    if (field === "phone") {
-      value = onlyNumbers(value).slice(0, 15);
-    }
-
+    reportInputError(field, error);
     setForm((prev) => ({
       ...prev,
       [field]: value
@@ -53,26 +59,22 @@ export function useProfileViewModel() {
   };
 
   const submit = async () => {
-    setError("");
-    setSuccess("");
-
     if (!user?.id) {
-      setError("No hay un usuario logueado");
+      toast.error("No hay un usuario logueado");
       return;
     }
 
-    if (!form.name.trim() || !form.lastname.trim() || !form.phone.trim()) {
-      setError("Completa todos los campos");
-      return;
-    }
+    const errors = compactErrors<ProfileField>({
+      name: validateName(form.name, SUBJECTS.name),
+      lastname: validateName(form.lastname, SUBJECTS.lastname),
+      phone: validatePhone(form.phone, SUBJECTS.phone)
+    });
+    replaceFieldErrors(errors);
 
-    if (!isValidName(form.name) || !isValidName(form.lastname)) {
-      setError("El nombre y apellido solo deben contener letras");
-      return;
-    }
+    const summary = summarizeErrors(errors);
 
-    if (!isValidPhone(form.phone)) {
-      setError("El teléfono debe contener entre 8 y 15 números");
+    if (summary) {
+      toast.error(summary);
       return;
     }
 
@@ -99,9 +101,9 @@ export function useProfileViewModel() {
         phone: response.phone ?? form.phone
       });
 
-      setSuccess("Perfil actualizado con éxito");
+      toast.success("Perfil actualizado con éxito");
     } catch (error) {
-      setError(
+      toast.error(
         error instanceof Error
           ? error.message
           : "No se pudo actualizar el usuario"
@@ -116,7 +118,6 @@ export function useProfileViewModel() {
     handleChange,
     submit,
     isLoading,
-    error,
-    success
+    fieldErrors
   };
 }

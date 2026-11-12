@@ -1,5 +1,6 @@
 import type React from "react";
 import { useLoginViewModel } from "../viewmodels/user-login";
+import { FieldError } from "../components/FieldError";
 
 interface LoginPageProps {
   onNavigateToRegister: () => void
@@ -15,6 +16,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     setPassword,
     isLoading,
     error,
+    fieldErrors,
     submit
   } = useLoginViewModel()
   return (
@@ -53,25 +55,34 @@ export const LoginPage: React.FC<LoginPageProps> = ({
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
             <h1 className="text-3xl font-extrabold text-slate-900">Bienvenido</h1>
-            <p className="mt-2">Crear nueva cuenta</p>
+            <p className="mt-2">Inicia sesión en tu cuenta</p>
           </div>
-          <form onSubmit={submit}>
+          <form onSubmit={submit} noValidate>
             <input
-              type="text"
-              className="w-full px-4 py-3 border border-slate-400 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-              placeholder="Usuario o correo"
+              type="email"
+              autoComplete="email"
+              className="w-full px-4 py-3 border border-slate-400 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all aria-invalid:border-red-500 aria-invalid:focus:border-red-500 aria-invalid:focus:ring-red-500"
+              placeholder="Correo electrónico"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              aria-invalid={Boolean(fieldErrors.email)}
+              aria-describedby="login-email-error"
               required
             />
+            <FieldError id="login-email-error" message={fieldErrors.email} />
             <input
               type="password"
-              className="w-full mt-2 mb-4 px-4 py-3 border border-slate-400 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              autoComplete="current-password"
+              className="w-full mt-2 mb-1 px-4 py-3 border border-slate-400 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all aria-invalid:border-red-500 aria-invalid:focus:border-red-500 aria-invalid:focus:ring-red-500"
               placeholder="Contraseña"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              aria-invalid={Boolean(fieldErrors.password)}
+              aria-describedby="login-password-error"
               required
             />
+            <FieldError id="login-password-error" message={fieldErrors.password} />
+            <div className="mb-3" />
             <div className="flex items-center justify-between">
               <label
                 htmlFor=""
@@ -90,7 +101,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               </a>
             </div>
             <div className="mt-4">
-              <p className="mb-3 text-sm text-red-500">{error}</p>
+              {error && (
+                <p role="alert" className="mb-3 text-sm text-red-500">{error}</p>
+              )}
               <button
                 className="w-full py-3 px-4 bg-blue-800 rounded-lg text-white hover:bg-blue-900 hover:shadow-lg transition-all duration-200 active:scale-[0.98] disabled:opacity-50"
                 type="submit"

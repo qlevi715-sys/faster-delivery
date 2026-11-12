@@ -13,14 +13,14 @@ import { ProductCreatePage } from './pages/ProductCreatePage'
 const ProtectedRoute = () => {
   const { isAuthenticated, isHydrated } = useAuth()
   if (!isHydrated) return null
-  return isAuthenticated ? <Outlet/> : <Navigate to="/login" replace/>
+  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />
 }
 
 //GUARDAR LA RUTA PUBLICA
 const PublicRoute = () => {
   const { isAuthenticated, isHydrated } = useAuth()
   if (!isHydrated) return null
-  return !isAuthenticated ? <Outlet/> : <Navigate to="/catalog" replace/>
+  return !isAuthenticated ? <Outlet /> : <Navigate to="/catalog" replace />
 }
 
 // Le pasa a ProfilePage la prop que exige
@@ -29,24 +29,34 @@ const ProfileRoute = () => {
   return <ProfilePage onBackToDashboard={() => navigate("/catalog")} />
 }
 
+const LoginRoute = () => {
+  const navigate = useNavigate()
+  return <LoginPage onNavigateToRegister={() => navigate("/register")} />
+}
+
+const RegisterRoute = () => {
+  const navigate = useNavigate()
+  return <RegisterPage onNavigateToLogin={() => navigate("/login")} />
+}
+
 function App() {
   return (
     <BrowserRouter>
       <Toaster />
       <Routes>
         {/*RUTAS PUBLICAS*/}
-        <Route element={<PublicRoute/>}>
-          <Route path='/login' element={<LoginPage onNavigateToRegister={() => {}}/>}/>
-          <Route path='/register' element={<RegisterPage onNavigateToLogin={() => {}}/>}/>
+        <Route element={<PublicRoute />}>
+          <Route path='/login' element={<LoginRoute />} />
+          <Route path='/register' element={<RegisterRoute />} />
         </Route>
 
-        <Route element={<ProtectedRoute/>}>
-          <Route element={<MainLayout/>}>
-            <Route path='/' element={<Navigate to="/catalog"/>}/>
-            <Route path='/catalog' element={<DashboardPage/>}/>
-            <Route path='/categories/create' element={<CategoriesPage/>}/>
-            <Route path='/products/create' element={<ProductCreatePage/>}/>
-            <Route path='/profile' element={<ProfileRoute/>}/>
+        <Route element={<ProtectedRoute />}>
+          <Route element={<MainLayout />}>
+            <Route path='/' element={<Navigate to="/catalog" />} />
+            <Route path='/catalog' element={<DashboardPage />} />
+            <Route path='/categories/create' element={<CategoriesPage />} />
+            <Route path='/products/create' element={<ProductCreatePage />} />
+            <Route path='/profile' element={<ProfileRoute />} />
           </Route>
         </Route>
       </Routes>

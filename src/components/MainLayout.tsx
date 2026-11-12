@@ -3,12 +3,18 @@ import { useAuth } from "../context/useAuth";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Menu, UserRound } from "lucide-react";
+import { toast } from "sonner";
 import { Drawer } from "./Drawer";
 
 export const MainLayout: React.FC = () => {
     const { user, logout } = useAuth()
     const navigate = useNavigate()
     const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+
+    const handleLogout = () => {
+        logout()
+        toast.success("Sesión cerrada correctamente")
+    }
 
     return (
         <div className="flex min-h-screen bg-slate-50">
@@ -43,7 +49,7 @@ export const MainLayout: React.FC = () => {
                         </button>
                         <button
                             type="button"
-                            onClick={logout}
+                            onClick={handleLogout}
                             className="rounded-lg bg-red-400 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
                         >
                             Cerrar sesion

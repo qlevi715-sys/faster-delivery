@@ -1,6 +1,5 @@
-import { useEffect } from "react";
 import { useCategoryViewModel } from "../viewmodels/use-category";
-import { toast } from "sonner";
+import { FieldError } from "./FieldError";
 
 interface CategoryFormProps {
   onCancel: () => void;
@@ -16,17 +15,8 @@ export const CategoryForm = ({
     handleChange,
     submit,
     isLoading,
-    error,
-    success
+    fieldErrors
   } = useCategoryViewModel(onSuccess);
-
-  useEffect(() => {
-    if (error) toast.error(error);
-  }, [error]);
-
-  useEffect(() => {
-    if (success) toast.success(success);
-  }, [success]);
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden max-w-4xl">
@@ -39,7 +29,7 @@ export const CategoryForm = ({
         </p>
       </div>
 
-      <form onSubmit={submit} className="p-6 space-y-6">
+      <form onSubmit={submit} noValidate className="p-6 space-y-6">
         <div>
           <label
             htmlFor="nombre-categoria"
@@ -55,8 +45,11 @@ export const CategoryForm = ({
             value={form.name}
             onChange={(e) => handleChange("name", e.target.value)}
             placeholder="Ej: Pizza Artesanales"
-            className="w-full rounded-lg border border-slate-200 py-3 px-4 text-xs placeholder-slate-400 focus:border-indigo-600 focus:outline-none"
+            aria-invalid={Boolean(fieldErrors.name)}
+            aria-describedby="nombre-categoria-error"
+            className="w-full rounded-lg border border-slate-200 py-3 px-4 text-xs placeholder-slate-400 focus:border-indigo-600 focus:outline-none aria-invalid:border-red-500 aria-invalid:focus:border-red-500"
           />
+          <FieldError id="nombre-categoria-error" message={fieldErrors.name} />
         </div>
 
         <div>
@@ -73,8 +66,11 @@ export const CategoryForm = ({
             value={form.description}
             onChange={(e) => handleChange("description", e.target.value)}
             placeholder="Describe los productos incluidos en esta categoría"
-            className="w-full h-32 rounded-lg border border-slate-200 py-3 px-4 text-xs placeholder-slate-400 focus:border-indigo-600 focus:outline-none"
+            aria-invalid={Boolean(fieldErrors.description)}
+            aria-describedby="descripcion-categoria-error"
+            className="w-full h-32 rounded-lg border border-slate-200 py-3 px-4 text-xs placeholder-slate-400 focus:border-indigo-600 focus:outline-none aria-invalid:border-red-500 aria-invalid:focus:border-red-500"
           />
+          <FieldError id="descripcion-categoria-error" message={fieldErrors.description} />
         </div>
 
         <div className="flex gap-3 justify-end border-t border-slate-100 pt-5">
