@@ -1,4 +1,5 @@
 import { Heart, ShoppingCart } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { ProductResponse } from "../models/product";
 
 interface ProductCardProps {
@@ -18,7 +19,11 @@ export const ProductCard = ({product}: ProductCardProps) => {
 
             <div className="p-3">
                 <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-sm font-bold text-slate-800">{product.name}</h3>
+                    <h3 className="text-sm font-bold text-slate-800">
+                        <Link to={`/products/${product.id}`} className="hover:text-indigo-700 hover:underline">
+                            {product.name}
+                        </Link>
+                    </h3>
                     <span className="whitespace-nowrap text-sm font-bold"> ${product.regularPrice.toFixed(2)}</span>
                 </div>
 

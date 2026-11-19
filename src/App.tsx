@@ -9,6 +9,7 @@ import { BrowserRouter, Navigate, Outlet, Routes, Route, useNavigate } from 'rea
 import { MainLayout } from './components/MainLayout'
 import { CategoriesPage } from './pages/CategoriesPage'
 import { ProductCreatePage } from './pages/ProductCreatePage'
+import { ProductDetailPage } from './pages/ProductDetailPage'
 
 const ProtectedRoute = () => {
   const { isAuthenticated, isHydrated } = useAuth()
@@ -56,6 +57,7 @@ function App() {
             <Route path='/catalog' element={<DashboardPage />} />
             <Route path='/categories/create' element={<CategoriesPage />} />
             <Route path='/products/create' element={<ProductCreatePage />} />
+            <Route path='/products/:id' element={<ProductDetailPage />} />
             <Route path='/profile' element={<ProfileRoute />} />
           </Route>
         </Route>
