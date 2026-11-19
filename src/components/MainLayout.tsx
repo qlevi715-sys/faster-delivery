@@ -2,9 +2,10 @@ import type React from "react";
 import { useAuth } from "../context/useAuth";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Menu, UserRound } from "lucide-react";
+import { Menu, ShoppingCart, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { Drawer } from "./Drawer";
+import { INITIAL_CART_ITEMS } from "../data/cart";
 
 export const MainLayout: React.FC = () => {
     const { user, logout } = useAuth()
@@ -36,6 +37,19 @@ export const MainLayout: React.FC = () => {
                         Fast Delivery
                     </h1>
                     <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => navigate("/cart")}
+                            className="relative rounded-lg border border-slate-300 p-2 text-slate-700 hover:bg-slate-100"
+                            aria-label={`Ver carrito (${INITIAL_CART_ITEMS.length} productos)`}
+                        >
+                            <ShoppingCart size={18} />
+                            {INITIAL_CART_ITEMS.length > 0 && (
+                                <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-indigo-600 px-1 text-[10px] font-bold text-white">
+                                    {INITIAL_CART_ITEMS.length}
+                                </span>
+                            )}
+                        </button>
                         <button
                             type="button"
                             onClick={() => navigate("/profile")}

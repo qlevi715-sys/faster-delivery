@@ -10,6 +10,7 @@ import { MainLayout } from './components/MainLayout'
 import { CategoriesPage } from './pages/CategoriesPage'
 import { ProductCreatePage } from './pages/ProductCreatePage'
 import { ProductDetailPage } from './pages/ProductDetailPage'
+import { CartPage } from './pages/CartPage'
 
 const ProtectedRoute = () => {
   const { isAuthenticated, isHydrated } = useAuth()
@@ -58,6 +59,7 @@ function App() {
             <Route path='/categories/create' element={<CategoriesPage />} />
             <Route path='/products/create' element={<ProductCreatePage />} />
             <Route path='/products/:id' element={<ProductDetailPage />} />
+            <Route path='/cart' element={<CartPage />} />
             <Route path='/profile' element={<ProfileRoute />} />
           </Route>
         </Route>
